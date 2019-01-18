@@ -14,10 +14,17 @@ To install the required modules, run the following command from a terminal.
 
 This will install the following:
 - virtualenv `pip install virtualenv` or `pip3 install virtualenv`
-- direnv `pip install direnv` or `pip3 install direnv`
 - ngrok `npm install ngrok`
 - Flask `pip install Flask` or `pip3 install Flask`
 - requests `pip install requests` or `pip3 install requests`
+
+If you don't already have direnv installed, install it using the following command: 
+
+`pip install direnv` or `pip3 install direnv`
+
+Modify your shell profile (i.e. ~/.bash_profile) by adding the following:
+
+`eval "$(direnv hook bash)"`
 
 # Create Python Virtual Environment
 
