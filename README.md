@@ -10,9 +10,12 @@ To set the ngrok callback URL, modify the environment variable, NGROK_CALLBACK, 
 
 `npm install direnv`
 
+# Configure Ngrok
+
+To expose the flask web service external, use ngrok
 # Configure callback URL
 
-Use the following steps to configure the callback URL. This callback URL is called by Broadvoice when a signaling event occurs.
+For Broadvoice to send signaling events to your Flask web service, it needs the URL to the Flask web service running locally exposed externally by ngrok. Use the following steps to configure this callback URL. The callback URL is called by Broadvoice when a signaling event occurs.
 
 1. Sign-in to the [Broadvoice dashboard](https://portal.broadvoice.com/sign_in).
 2. Navigate to **Settings** -> **Destinations** -> **Call Flow**.
@@ -20,6 +23,27 @@ Use the following steps to configure the callback URL. This callback URL is call
 4. Modify the **Response URL** with the ngrok URL as shown in the below screenshot.
 
 ![screenshot for where to configure the response URL to the Flask web service](https://github.com/maximo/broadvoice_prototype/blob/master/response_url.png)
+
+# Create Python Virtual Environment
+
+Flask runs in a Python3 virtual environment. To create this virtual environment, run the following command:
+
+`python3 -m venv venv`
+
+This create a virtual environment named `venv`. You can change this name to your liking.
+
+# Run Web Service
+
+Before starting the web service, activate the virtual environment (created in the previous section) by running the following command:
+
+`source venv/bin/activate`
+
+Next, configure the file, .envrc, to specify the ngrok URL in the environment variable `NGROK_CALLBACK`.
+
+To start the Flask web service, open a terminal window, navigate to this folder, and run the following command:
+
+`flask run`
+
 
 # Broadvoice Documentation
 
