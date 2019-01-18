@@ -28,24 +28,26 @@ Flask runs in a Python3 virtual environment. To create this virtual environment,
 This create a virtual environment named `ve`. You can change this name to your liking.
 
 
+# Configure Ngrok
+
+To expose the flask web service externally, run ngrok passing the default port number used by the Flask web service. This would be `5000` from the URL `http://127.0.0.1:5000`. If the Flask web service uses a different port number, you'll need it instead of `5000`.
+
+`ngrok/bin/ngrok http 5000`
+
+
 # Run Web Service
 
 Before starting the web service, activate the virtual environment (created in the previous section) by running the following command:
 
 `source ve/bin/activate`
 
-Next, configure the file, .envrc, to specify the ngrok URL in the environment variable `NGROK_CALLBACK`.
+Next, modify the file, .envrc, to specify the ngrok URL in the environment variable `NGROK_CALLBACK`. Then run the following command:
+
+`direnv allow`
 
 To start the Flask web service, open a terminal window, navigate to this folder, and run the following command:
 
 `flask run`
-
-
-# Configure Ngrok
-
-To expose the flask web service externally, run ngrok passing the port number used by the Flask web service. This would be `5000` from the URL `http://127.0.0.1:5000`.
-
-`ngrok/bin/ngrok http 5000`
 
 
 # Configure callback URL
