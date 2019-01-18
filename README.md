@@ -19,6 +19,7 @@ Use the following steps to configure the callback URL. This callback URL is call
 3. click **Edit** on the Remote Call Flow entry.
 4. Modify the **Response URL** with the ngrok URL as shown in the below screenshot.
 
+![screenshot for where to configure the response URL to the Flask web service](https://github.com/maximo/broadvoice_prototype/blob/master/response_url.png)
 
 # Broadvoice Documentation
 
