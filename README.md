@@ -14,6 +14,7 @@ To install the required modules, run the following command from a terminal.
 
 This will install the following:
 - virtualenv `pip install virtualenv` or `pip3 install virtualenv`
+- direnv `pip install direnv` or `pip3 install direnv`
 - ngrok `npm install ngrok`
 - Flask `pip install Flask` or `pip3 install Flask`
 - requests `pip install requests` or `pip3 install requests`
