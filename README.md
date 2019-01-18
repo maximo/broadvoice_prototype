@@ -6,7 +6,7 @@ There's a web service to receive signaling events from Broadvoice (i.e. incoming
 
 To send signaling commands to Broadvoice (i.e transfer call, place call on hold with Moh, start recording, etc), the call.py file builds these requests using Broadvoice's REST APIs. This cli is not integrated with the web service.
 
-# Intall Requirements
+# Install Requirements
 
 To install the required modules, run the following command from a terminal.
 
