@@ -43,9 +43,9 @@ To start the Flask web service, open a terminal window, navigate to this folder,
 
 # Configure Ngrok
 
-To expose the flask web service externally, run ngrok passing the port number used by the Flask web service. This would be `http://127.0.0.1:5000`.
+To expose the flask web service externally, run ngrok passing the port number used by the Flask web service. This would be `5000` from the URL `http://127.0.0.1:5000`.
 
-`ngrok http 5000`
+`ngrok/bin/ngrok http 5000`
 
 
 # Configure callback URL
