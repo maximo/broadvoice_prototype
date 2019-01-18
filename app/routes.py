@@ -11,7 +11,7 @@ from flask import Response, request
 print("name: {0}".format(__name__.split('.')[0]))
 
 # flask web service base url
-callback = "SPECIFY THE NGROK URL"
+callback = os.environ['NGROK_CALLBACK']
 
 # tenant in-memory database (TESTING)
 tenants = {}
