@@ -15,10 +15,18 @@ print("name: {0}".format(__name__.split('.')[0]))
 
 class BroadVoice:
     def __init__(self):
-        self.base = {os.environ['API_KEY']: ''}
+        self.auth=(os.environ['API_KEY'], '')
         self.moh = 'broadvoice' # TODO: set url for music on hold
         # flask web service base url
         self.callback = os.environ['NGROK_CALLBACK']
+        """
+        self.xbp_headers = {'Authorization': 
+                        'Bearer 7dcbf1b2151e487aa005a0893ae38a32',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'}
+        """
+        self.xbp_headers = {'Accept': 'application/json',
+                            'Content-Type': 'application/json'}
 
         # tenant in-memory database (TESTING)
         self.tenants = {}
@@ -78,17 +86,46 @@ class BroadVoice:
         return ET.tostring(resp)
     # end function
 
-    def dial_outbound(self, phone):
-        payload = {'from': '110', 
+    def call(self, ext, phone):
+        payload = {'from': ext, # must be configured in Broadvoice dashboard: 401
                     'to': phone,
-                    'display_number': phone
+                    'display_number': phone,
+                    'display_name': 'CoreInteract'
                 }
-        result = requests.post('https://api.xbp.io/calls',
-                data=json.dumps({**self.base, **payload}),
-                headers={'Content-Type': 'application/json'}
+        result = requests.post('https://api.xbp.io/v1/calls',
+                auth=self.auth,
+                data=json.dumps({**payload}),
+                headers=self.xbp_headers
             )
-        print(result)
         resp = json.loads(result.content)
+        print(resp)
+        return result
+    # end function
+
+    def transfer(self, callid, dest):
+        payload = {'destination': dest}
+        result = requests.put('https://api.xbp.io/v1/calls/{}'.format(
+                callid
+            ),
+            auth=self.auth,
+            data=json.dumps({**payload}),
+            headers=self.xbp_headers
+        )
+        resp = json.loads(result.content)
+        print(resp)
+        return result
+    # end function
+
+    def hangup(self, callid):
+        result = requests.delete('https://api.xbp.io/v1/calls/{}'.format(
+                callid
+            ),
+            auth=self.auth,
+            headers=self.xbp_headers
+        )
+        resp = json.loads(result.content)
+        print(resp)
+        return result
     # end function
 # end class
 
@@ -121,13 +158,30 @@ def index():
     return Response(output, mimetype='text/xml')
 # end function
 
-@app.route('/dial/<phone>', methods=['GET'])
-def transfer_call(phone):
+@app.route('/dial/<extension>/<phone>', methods=['GET'])
+def call(extension, phone):
+    print("ext: {}".format(extension))
     print("phone: {}".format(phone))
-    resp = provider.dial_outbound(phone)
+    resp = provider.call(extension, phone)
     print(resp)
+    return Response(resp, mimetype='application/json')
+# end function
 
-    return Response(ET.tostring(resp), mimetype='text/xml')
+@app.route('/transfer/<callId>/dest', methods=['GET'])
+def transfer(callid, dest):
+    print("callId: {}".format(callid))
+    print("destination: {}".format(dest))
+    resp = provider.transfer(callid, dest)
+    print(resp)
+    return Response(resp, mimetype='application/json')
+# end function
+
+@app.route('/hangup/<callId>', methods=['GET'])
+def hangup(callid):
+    print("callId: {}".format(callid))
+    resp = provider.hangup(callid)
+    print(resp)
+    return Response(resp, mimetype='application/json')
 # end function
 
 @app.route('/ivr', methods=['POST'])
