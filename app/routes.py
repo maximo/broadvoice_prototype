@@ -19,12 +19,6 @@ class BroadVoice:
         self.moh = 'broadvoice' # TODO: set url for music on hold
         # flask web service base url
         self.callback = os.environ['NGROK_CALLBACK']
-        """
-        self.xbp_headers = {'Authorization': 
-                        'Bearer 7dcbf1b2151e487aa005a0893ae38a32',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'}
-        """
         self.xbp_headers = {'Accept': 'application/json',
                             'Content-Type': 'application/json'}
 
@@ -32,9 +26,12 @@ class BroadVoice:
         self.tenants = {}
         # add tenants
         self.tenants['+13852100789'] = 'tenant1'
+
+        # track active calls
+        self.active_calls = {}
     # end function
 
-    def play_audio(self, url, loop_count):
+    def ivr_play_audio(self, url, loop_count):
         resp = ET.Element('Response')
         audio = ET.Element(resp, 'Play')
         audio.set('loop', loop_count)
@@ -42,14 +39,14 @@ class BroadVoice:
         return ET.tostring(resp)
     # end function
 
-    def speak(self, message):
+    def ivr_speak(self, message):
         resp = ET.Element('Response')
         say = ET.Element(resp, 'Say')
         say.text = message
         return ET.tostring(resp)
     # end function
 
-    def hangup(self, message):
+    def ivr_hangup(self, message):
         resp = ET.Element('Response')
         say = ET.Element(resp, 'Say')
         say.text = message
@@ -57,7 +54,7 @@ class BroadVoice:
         return ET.tostring(resp)
     # end function
 
-    def build_conf(self, name, mute, record):
+    def conference(self, name, mute = False, record = False):
         room = 'room-' + name
         print("conference name: {}".format(room))
 
@@ -76,7 +73,7 @@ class BroadVoice:
         return ET.tostring(resp)
     # end function
 
-    def build_IVR(self, message):
+    def ivr(self, message):
         resp = ET.Element('Response')
         gather = ET.SubElement(resp, 'Gather')
         gather.set('action', self.callback + 'ivr')
@@ -87,10 +84,11 @@ class BroadVoice:
     # end function
 
     def call(self, ext, phone):
+        print("call")
         payload = {'from': ext, # must be configured in Broadvoice dashboard: 401
                     'to': phone,
                     'display_number': phone,
-                    'display_name': 'CoreInteract'
+                    'display_name': 'customer'
                 }
         result = requests.post('https://api.xbp.io/v1/calls',
                 auth=self.auth,
@@ -99,10 +97,25 @@ class BroadVoice:
             )
         resp = json.loads(result.content)
         print(resp)
+        callid = resp['call_uuid']
+        self.active_calls[callid] = ext
         return result
     # end function
 
+    def hold(self, callid):
+        print("call on hold")
+        return self.conference(callid)
+    # end function
+        
+    def unhold(self, callid):
+        print("call unhold")
+        dest = self.active_calls[callid]
+        print("destination: {}".format(dest))
+        return self.transfer(dest)
+    # end function
+        
     def transfer(self, callid, dest):
+        print("call transfer")
         payload = {'destination': dest}
         result = requests.put('https://api.xbp.io/v1/calls/{}'.format(
                 callid
@@ -117,10 +130,13 @@ class BroadVoice:
     # end function
 
     def hangup(self, callid):
+        print("call hangup")
+        payload = {}
         result = requests.delete('https://api.xbp.io/v1/calls/{}'.format(
                 callid
             ),
             auth=self.auth,
+            data=json.dumps({**payload}),
             headers=self.xbp_headers
         )
         resp = json.loads(result.content)
@@ -153,21 +169,21 @@ def index():
     print("to: {}".format(request.form['To']))
     print("direction: {}".format(request.form['Direction']))
     
-    output = provider.build_conf(request.form['From'])
+    output = provider.conference(request.form['From'])
     print("room: {}".format(output))
     return Response(output, mimetype='text/xml')
 # end function
 
-@app.route('/dial/<extension>/<phone>', methods=['GET'])
+@app.route('/call/<extension>/<phone>', methods=['GET'])
 def call(extension, phone):
-    print("ext: {}".format(extension))
+    print("ext: {}".format(extension)) # extension should be 401 (sandbox)
     print("phone: {}".format(phone))
     resp = provider.call(extension, phone)
     print(resp)
     return Response(resp, mimetype='application/json')
 # end function
 
-@app.route('/transfer/<callId>/dest', methods=['GET'])
+@app.route('/transfer/<callid>/<dest>', methods=['GET'])
 def transfer(callid, dest):
     print("callId: {}".format(callid))
     print("destination: {}".format(dest))
@@ -176,7 +192,23 @@ def transfer(callid, dest):
     return Response(resp, mimetype='application/json')
 # end function
 
-@app.route('/hangup/<callId>', methods=['GET'])
+@app.route('/hold/<callid>', methods=['GET'])
+def hold(callid):
+    print("callId: {}".format(callid))
+    resp = provider.hold(callid)
+    print(resp)
+    return Response(resp, mimetype='application/json')
+# end function
+
+@app.route('/unhold/<callid>', methods=['GET'])
+def unhold(callid):
+    print("callId: {}".format(callid))
+    resp = provider.unhold(callid)
+    print(resp)
+    return Response(resp, mimetype='application/json')
+# end function
+
+@app.route('/hangup/<callid>', methods=['GET'])
 def hangup(callid):
     print("callId: {}".format(callid))
     resp = provider.hangup(callid)
@@ -197,7 +229,7 @@ def ivr():
     if digits == '2':
         output = CreateResponse("support-{}".format(caller))
     else:
-        output = provider.build_IVR("for sales please press 1, for support press 2.",
+        output = provider.ivr("for sales please press 1, for support press 2.",
                             ivr_callback)
 
     return Response(output, mimetype='text/xml')
